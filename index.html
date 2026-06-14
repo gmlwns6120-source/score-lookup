@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수행평가 점수 확인</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #FAFAF7; font-family: 'Apple SD Gothic Neo', -apple-system, sans-serif; color: #1A1A1A; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 28px 16px 60px; }
+  .card { background: #fff; border: 1px solid #E5E5E0; border-radius: 14px; padding: 30px 26px; width: 100%; max-width: 460px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .card-wide { max-width: 700px; }
+  .brand { font-size: 11px; font-weight: 600; color: #C5803F; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 6px; }
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .sub { font-size: 13.5px; color: #6B6B66; margin-bottom: 22px; line-height: 1.5; }
+  label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; }
+  input, textarea, select { width: 100%; padding: 11px 13px; border: 1.5px solid #E5E5E0; border-radius: 9px; font-size: 15px; color: #1A1A1A; background: #fff; outline: none; margin-bottom: 14px; font-family: inherit; }
+  textarea { height: 150px; resize: vertical; font-size: 13px; font-family: monospace; }
+  input[type=file] { padding: 8px; font-size: 14px; border: 1.5px dashed #E5E5E0; background: #FAFAF7; cursor: pointer; }
+  .btn { display: block; width: 100%; padding: 12px 18px; border: none; border-radius: 9px; font-size: 14.5px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 4px; }
+  .btn-primary { background: #3A4A8C; color: #fff; }
+  .btn-dark { background: #4A4A45; color: #fff; }
+  .btn-sm { display: inline-block; width: auto; padding: 7px 14px; font-size: 13px; margin-top: 0; }
+  .btn-outline { background: transparent; border: 1.5px solid #D4D4CE; color: #1A1A1A; }
+  .btn-green { background: #3D7050; color: #fff; }
+  .btn-amber { background: #C5803F; color: #fff; }
+  .btn-red { background: #A8424A; color: #fff; }
+  .err { font-size: 13px; color: #A8424A; margin: -6px 0 12px; line-height: 1.4; }
+  .ok { font-size: 13px; color: #3D7050; margin: -6px 0 12px; line-height: 1.4; }
+  .divider { border: none; border-top: 1px solid #E5E5E0; margin: 22px 0; }
+  .hidden { display: none; }
+  .tab-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 26px; }
+  .tab-btn { padding: 8px 16px; border-radius: 8px; border: 1.5px solid #E5E5E0; background: transparent; color: #6B6B66; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .tab-btn.active { background: #3A4A8C; color: #fff; border-color: #3A4A8C; }
+  .info-box { padding: 14px 16px; background: #F5F3EC; border: 1px solid #E5E5E0; border-radius: 10px; margin-bottom: 18px; font-size: 13px; color: #6B6B66; line-height: 1.7; }
+  .info-box strong { color: #1A1A1A; }
+  .score-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #FAFAF7; border-radius: 10px; border: 1px solid #E5E5E0; margin-bottom: 10px; }
+  .score-item.ungraded { background: #F5F5F0; }
+  .score-title { font-weight: 600; font-size: 14.5px; }
+  .score-max { font-size: 12px; color: #9E9E98; margin-top: 2px; }
+  .score-val { font-size: 22px; font-weight: 700; color: #3A4A8C; }
+  .score-denom { font-size: 13px; color: #6B6B66; margin-left: 2px; }
+  .total-box { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; background: #3A4A8C; color: #fff; border-radius: 10px; margin-bottom: 22px; }
+  .total-label { font-size: 11px; font-weight: 600; letter-spacing: 2px; opacity: 0.8; }
+  .total-title { font-size: 16px; font-weight: 600; margin-top: 2px; }
+  .total-val { font-size: 30px; font-weight: 700; }
+  .total-denom { font-size: 15px; opacity: 0.85; margin-left: 3px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 9px 12px; text-align: left; }
+  thead tr { background: #F5F3EC; }
+  th { color: #6B6B66; font-size: 12px; font-weight: 600; }
+  tbody tr { border-top: 1px solid #E5E5E0; }
+  td.center { text-align: center; }
+  td.code-cell { font-family: 'Courier New', monospace; letter-spacing: 2px; font-weight: 700; color: #3A4A8C; font-size: 15px; }
+  td.muted { color: #6B6B66; }
+  td.missing { color: #B07A2A; font-style: italic; font-size: 13px; }
+  .table-wrap { overflow-x: auto; border: 1px solid #E5E5E0; border-radius: 10px; }
+  .row-btns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .saved-badge { padding: 12px 16px; background: #F0FDF4; border: 1px solid #86EFAC; border-radius: 10px; font-size: 13px; color: #3D7050; margin-top: 16px; line-height: 1.6; }
+  .link-text { background: none; border: none; color: #9E9E98; font-size: 12px; cursor: pointer; text-decoration: underline; padding: 0; font-family: inherit; }
+  .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+</style>
+</head>
+<body>
+
+<!-- ══ 로그인 화면 ══ -->
+<div id="screen-login" class="card">
+  <p class="brand">SCIENCE · 1학년</p>
+  <h1>수행평가 점수 확인</h1>
+  <p class="sub">본인의 학번, 이름, 인증번호를 입력하세요.</p>
+
+  <label>학번</label>
+  <input id="login-sid" type="text" inputmode="numeric" placeholder="예) 10101">
+  <label>이름</label>
+  <input id="login-name" type="text" placeholder="예) 홍길동">
+  <label>인증번호 (6자리)</label>
+  <input id="login-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000" style="letter-spacing:4px;font-weight:600;">
+  <p id="login-err" class="err hidden"></p>
+  <button class="btn btn-primary" onclick="doLogin()">점수 확인하기</button>
+
+  <hr class="divider">
+  <button class="link-text" onclick="toggleAdmin()">교사 로그인</button>
+  <div id="admin-box" class="hidden" style="margin-top:12px;">
+    <label>관리자 비밀번호</label>
+    <input id="admin-pw" type="password" placeholder="비밀번호 입력">
+    <p id="admin-err" class="err hidden"></p>
+    <button class="btn btn-dark" onclick="doAdmin()">관리자 접속</button>
+  </div>
+</div>
+
+<!-- ══ 결과 화면 ══ -->
+<div id="screen-result" class="card hidden">
+  <p class="brand">수행평가 결과</p>
+  <h1 id="result-name"></h1>
+  <p class="sub" id="result-sid"></p>
+  <div id="result-items"></div>
+  <div class="total-box">
+    <div><div class="total-label" id="result-complete-label">TOTAL</div><div class="total-title">합계</div></div>
+    <div><span class="total-val" id="result-total"></span><span class="total-denom" id="result-max"></span></div>
+  </div>
+  <button class="btn btn-outline" onclick="showScreen('login')">돌아가기</button>
+  <p style="font-size:11.5px;color:#9E9E98;margin-top:16px;text-align:center;line-height:1.5;">점수에 이의가 있는 경우 담당 선생님께 문의하세요.</p>
+</div>
+
+<!-- ══ 관리자 화면 ══ -->
+<div id="screen-admin" class="card card-wide hidden">
+  <div class="header-row">
+    <div><p class="brand">ADMIN</p><h1>관리자 페이지</h1></div>
+    <button class="btn btn-outline btn-sm" onclick="showScreen('login')">나가기</button>
+  </div>
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="switchTab('upload')">📂 점수 업로드</button>
+    <button class="tab-btn" onclick="switchTab('codes')">🔑 인증번호 관리</button>
+    <button class="tab-btn" onclick="switchTab('preview')">👁 점수 미리보기</button>
+  </div>
+
+  <!-- 업로드 탭 -->
+  <div id="tab-upload">
+    <div class="info-box">
+      <strong>📌 점수 업데이트 방법</strong><br>
+      <strong style="color:#3A4A8C;">방법 A — 파일 업로드:</strong> 구글 시트 → <strong>파일 → 다운로드 → CSV</strong> → 아래 파일 선택<br>
+      <strong style="color:#3A4A8C;">방법 B — 붙여넣기:</strong> 구글 시트 전체 복사(Ctrl+A → Ctrl+C) → 아래 텍스트박스에 붙여넣기
+    </div>
+    <label>CSV 파일 업로드</label>
+    <input type="file" accept=".csv,text/csv" onchange="handleFile(this)">
+    <label>또는 CSV 텍스트 직접 붙여넣기</label>
+    <textarea id="csv-text" placeholder="학번,이름,실험보고서(15),포트폴리오(20)&#10;10101,홍길동,15,18&#10;..."></textarea>
+    <p id="upload-msg" class="hidden"></p>
+    <button class="btn btn-primary" onclick="saveCSV()">저장하기</button>
+    <div id="upload-badge" class="hidden saved-badge"></div>
+  </div>
+
+  <!-- 인증번호 탭 -->
+  <div id="tab-codes" class="hidden">
+    <div id="codes-no-data" class="hidden" style="padding:20px;text-align:center;color:#6B6B66;">
+      먼저 <strong>"📂 점수 업로드"</strong> 탭에서 점수 데이터를 업로드해주세요.
+    </div>
+    <div id="codes-content">
+      <div class="row-btns">
+        <span id="codes-summary" style="font-size:14px;color:#6B6B66;"></span>
+      </div>
+      <div class="row-btns">
+        <button class="btn btn-green btn-sm" onclick="generateMissing()">미발급 학생에게 부여</button>
+        <button class="btn btn-amber btn-sm" onclick="printList()">🖨️ 인쇄용 목록</button>
+        <button class="btn btn-outline btn-sm" onclick="copyAll()">📋 복사</button>
+        <button class="btn btn-red btn-sm" onclick="regenerateAll()">전체 재발급</button>
+      </div>
+      <input type="text" id="codes-filter" placeholder="학번 또는 이름으로 검색" oninput="renderCodesTable()" style="margin-bottom:10px;">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>학번</th><th>이름</th><th>인증번호</th><th></th></tr></thead>
+          <tbody id="codes-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 미리보기 탭 -->
+  <div id="tab-preview" class="hidden">
+    <div id="preview-no-data" class="hidden" style="padding:20px;text-align:center;color:#6B6B66;">
+      먼저 <strong>"📂 점수 업로드"</strong> 탭에서 점수 데이터를 업로드해주세요.
+    </div>
+    <div id="preview-content" class="hidden">
+      <div id="preview-summary" style="font-size:14px;color:#6B6B66;margin-bottom:16px;"></div>
+      <div class="table-wrap"><table><thead id="preview-thead"></thead><tbody id="preview-tbody"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// 상태
+// ════════════════════════════════════════════════
+const ADMIN_PW = "teacher1234";
+let codes = {};      // { "10101": "382749" }
+let sheetData = null; // { assessments: [...], students: [...] }
+
+// ── localStorage ─────────────────────────────────
+function save() {
+  localStorage.setItem("score_codes", JSON.stringify(codes));
+  localStorage.setItem("score_sheet", JSON.stringify(sheetData));
+}
+function load() {
+  try { codes = JSON.parse(localStorage.getItem("score_codes")) || {}; } catch { codes = {}; }
+  try { sheetData = JSON.parse(localStorage.getItem("score_sheet")) || null; } catch { sheetData = null; }
+}
+
+// ════════════════════════════════════════════════
+// 화면 전환
+// ════════════════════════════════════════════════
+function showScreen(name) {
+  ["login","result","admin"].forEach(s => document.getElementById("screen-"+s).classList.add("hidden"));
+  document.getElementById("screen-"+name).classList.remove("hidden");
+  if (name === "admin") refreshAdminUI();
+}
+
+// ════════════════════════════════════════════════
+// 로그인
+// ════════════════════════════════════════════════
+function toggleAdmin() {
+  const box = document.getElementById("admin-box");
+  box.classList.toggle("hidden");
+}
+
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.classList.remove("hidden");
+}
+function hideErr(id) { document.getElementById(id).classList.add("hidden"); }
+
+function doLogin() {
+  hideErr("login-err");
+  const sid = document.getElementById("login-sid").value.trim();
+  const name = document.getElementById("login-name").value.trim();
+  const code = document.getElementById("login-code").value.trim();
+  if (!sid || !name || !code) return showErr("login-err","모든 항목을 입력해주세요.");
+  if (!sheetData) return showErr("login-err","아직 점수 데이터가 없습니다. 선생님께 문의하세요.");
+  if (!codes[sid]) return showErr("login-err","등록되지 않은 학번입니다. 담임 선생님께 인증번호를 받으세요.");
+  if (codes[sid] !== code) return showErr("login-err","인증번호가 일치하지 않습니다.");
+  const me = sheetData.students.find(st => st.id === sid && st.name === name);
+  if (!me) return showErr("login-err","학번과 이름이 일치하지 않습니다.");
+  showResult(me);
+}
+
+document.getElementById("login-code").addEventListener("keydown", e => { if(e.key==="Enter") doLogin(); });
+
+function doAdmin() {
+  const pw = document.getElementById("admin-pw").value;
+  if (pw === ADMIN_PW) { showScreen("admin"); }
+  else showErr("admin-err","관리자 비밀번호가 틀렸습니다.");
+}
+document.getElementById("admin-pw").addEventListener("keydown", e => { if(e.key==="Enter") doAdmin(); });
+
+// ════════════════════════════════════════════════
+// 결과
+// ════════════════════════════════════════════════
+function showResult(student) {
+  document.getElementById("result-name").textContent = student.name;
+  document.getElementById("result-sid").textContent = "학번 " + student.id;
+  const assessments = sheetData.assessments;
+  let total = 0, maxTotal = 0;
+  const isComplete = student.scores.every(s => s !== null);
+  let html = "";
+  assessments.forEach((a, i) => {
+    const sc = student.scores[i];
+    const ungraded = sc === null;
+    if (!ungraded) total += sc;
+    maxTotal += (a.max || 0);
+    html += `<div class="score-item${ungraded?" ungraded":""}">
+      <div><div class="score-title">${a.title}</div><div class="score-max">만점 ${a.max??"-"}점</div></div>
+      <div style="text-align:right">${ungraded
+        ? `<span style="font-size:13px;color:#9E9E98;font-style:italic;">미채점</span>`
+        : `<span class="score-val">${sc}</span><span class="score-denom">/ ${a.max??"-"}</span>`
+      }</div>
+    </div>`;
+  });
+  document.getElementById("result-items").innerHTML = html;
+  document.getElementById("result-complete-label").textContent = isComplete ? "TOTAL" : "현재까지";
+  document.getElementById("result-total").textContent = total;
+  document.getElementById("result-max").textContent = "/ " + maxTotal;
+  showScreen("result");
+}
+
+// ════════════════════════════════════════════════
+// CSV 파싱
+// ════════════════════════════════════════════════
+function parseCSV(text) {
+  const rows = text.trim().split("\n").map(r => r.split(",").map(c => c.replace(/^"|"$/g,"").trim()));
+  if (rows.length < 2) throw new Error("데이터가 없습니다.");
+  const header = rows[0];
+  const idIdx = header.findIndex(h => h.includes("학번"));
+  const nameIdx = header.findIndex(h => h.includes("이름") || h==="성명");
+  const totalIdx = header.findIndex(h => h.includes("총점") || h.includes("합계"));
+  if (idIdx===-1||nameIdx===-1) throw new Error("'학번'과 '이름' 열이 필요합니다.");
+  const assessments = [];
+  for (let i=0;i<header.length;i++) {
+    if (i===idIdx||i===nameIdx||i===totalIdx) continue;
+    if (!header[i]) continue;
+    const m = header[i].match(/\((\d+)\)/);
+    assessments.push({ title: header[i].replace(/\s*\(\d+\)\s*/,"").trim(), max: m?parseInt(m[1]):null, colIdx: i });
+  }
+  const students = [];
+  for (let r=1;r<rows.length;r++) {
+    const row = rows[r];
+    const id = (row[idIdx]||"").trim();
+    const name = (row[nameIdx]||"").trim();
+    if (!id||!name) continue;
+    students.push({ id, name, scores: assessments.map(a => { const v=(row[a.colIdx]||"").trim(); return v===""?null:Number(v); }) });
+  }
+  return { assessments, students };
+}
+
+// ════════════════════════════════════════════════
+// 업로드 탭
+// ════════════════════════════════════════════════
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { document.getElementById("csv-text").value = e.target.result; };
+  reader.readAsText(file, "UTF-8");
+}
+
+function saveCSV() {
+  const msg = document.getElementById("upload-msg");
+  const text = document.getElementById("csv-text").value;
+  if (!text.trim()) { msg.textContent="CSV 내용을 입력하거나 파일을 선택하세요."; msg.className="err"; msg.classList.remove("hidden"); return; }
+  try {
+    sheetData = parseCSV(text);
+    save();
+    msg.classList.add("hidden");
+    const badge = document.getElementById("upload-badge");
+    badge.innerHTML = `✅ <strong>${sheetData.students.length}명</strong>, 평가항목 <strong>${sheetData.assessments.length}개</strong> 저장 완료!<br><span style="color:#6B6B66;font-size:12px;">점수 수정 후에는 다시 업로드해주세요.</span>`;
+    badge.classList.remove("hidden");
+    refreshAdminUI();
+  } catch(e) {
+    msg.textContent = "❌ " + e.message; msg.className="err"; msg.classList.remove("hidden");
+  }
+}
+
+// ════════════════════════════════════════════════
+// 탭 전환
+// ════════════════════════════════════════════════
+function switchTab(name) {
+  ["upload","codes","preview"].forEach(t => {
+    document.getElementById("tab-"+t).classList.add("hidden");
+    document.querySelectorAll(".tab-btn")[["upload","codes","preview"].indexOf(t)].classList.remove("active");
+  });
+  document.getElementById("tab-"+name).classList.remove("hidden");
+  document.querySelectorAll(".tab-btn")[["upload","codes","preview"].indexOf(name)].classList.add("active");
+  if (name==="codes") renderCodesTable();
+  if (name==="preview") renderPreview();
+}
+
+function refreshAdminUI() {
+  renderCodesTable();
+  renderPreview();
+  if (sheetData) {
+    const badge = document.getElementById("upload-badge");
+    badge.innerHTML = `✅ 현재 저장된 데이터: <strong>${sheetData.students.length}명</strong>, 평가항목 <strong>${sheetData.assessments.length}개</strong><br><span style="color:#6B6B66;font-size:12px;">점수 수정 후에는 다시 업로드해주세요.</span>`;
+    badge.classList.remove("hidden");
+  }
+}
+
+// ════════════════════════════════════════════════
+// 인증번호 탭
+// ════════════════════════════════════════════════
+function generateCode() { return Math.floor(100000+Math.random()*900000).toString(); }
+
+function generateMissing() {
+  if (!sheetData) return alert("점수 데이터를 먼저 업로드하세요.");
+  let added = 0;
+  sheetData.students.forEach(st => { if (!codes[st.id]) { codes[st.id]=generateCode(); added++; } });
+  save(); renderCodesTable();
+  alert(added+"명의 학생에게 인증번호가 발급되었습니다.");
+}
+
+function regenerateAll() {
+  if (!sheetData) return;
+  if (!confirm("⚠️ 모든 학생의 인증번호를 새로 발급합니다. 기존 번호는 무효가 됩니다. 계속할까요?")) return;
+  sheetData.students.forEach(st => { codes[st.id]=generateCode(); });
+  save(); renderCodesTable();
+  alert("모든 인증번호가 재발급되었습니다.");
+}
+
+function regenerateOne(sid) {
+  if (!confirm(sid+" 학생의 인증번호를 재발급할까요?")) return;
+  codes[sid]=generateCode(); save(); renderCodesTable();
+}
+
+function copyAll() {
+  if (!sheetData) return;
+  const lines = ["학번\t이름\t인증번호"];
+  sheetData.students.forEach(st => lines.push(st.id+"\t"+st.name+"\t"+(codes[st.id]||"(미발급)")));
+  navigator.clipboard.writeText(lines.join("\n")).then(()=>alert("클립보드에 복사되었습니다."),()=>alert("복사 실패"));
+}
+
+function printList() {
+  if (!sheetData) return;
+  const w = window.open("","_blank","width=600,height=800");
+  if (!w) return alert("팝업이 차단되었습니다. 허용 후 다시 시도하세요.");
+  const rows = sheetData.students.map(st=>`<tr><td>${st.id}</td><td>${st.name}</td><td class="code">${codes[st.id]||"(미발급)"}</td></tr>`).join("");
+  w.document.write(`<html><head><meta charset="utf-8"><title>인증번호 목록</title>
+  <style>body{font-family:'Apple SD Gothic Neo',sans-serif;padding:30px}h1{font-size:18px;margin-bottom:8px}p{color:#666;font-size:13px;margin-bottom:24px}table{width:100%;border-collapse:collapse}th,td{padding:9px 12px;border:1px solid #ccc;text-align:left;font-size:13px}th{background:#f5f5f0}.code{font-family:'Courier New',monospace;letter-spacing:1.5px;font-weight:600}@media print{body{padding:0}}</style>
+  </head><body><h1>수행평가 점수 조회 인증번호</h1><p>발급일: ${new Date().toLocaleString("ko-KR")}</p>
+  <table><thead><tr><th>학번</th><th>이름</th><th>인증번호</th></tr></thead><tbody>${rows}</tbody></table>
+  <script>setTimeout(()=>window.print(),300)<\/script></body></html>`);
+  w.document.close();
+}
+
+function renderCodesTable() {
+  if (!sheetData) {
+    document.getElementById("codes-no-data").classList.remove("hidden");
+    document.getElementById("codes-content").classList.add("hidden");
+    return;
+  }
+  document.getElementById("codes-no-data").classList.add("hidden");
+  document.getElementById("codes-content").classList.remove("hidden");
+  const filter = (document.getElementById("codes-filter").value||"").toLowerCase();
+  const students = sheetData.students.filter(st => !filter || st.id.includes(filter) || st.name.toLowerCase().includes(filter));
+  const missing = sheetData.students.filter(st=>!codes[st.id]).length;
+  document.getElementById("codes-summary").innerHTML = `전체 <strong style="color:#1A1A1A">${sheetData.students.length}</strong>명 · 미발급 <strong style="color:${missing>0?"#B07A2A":"#3D7050"}">${missing}</strong>명`;
+  const tbody = document.getElementById("codes-tbody");
+  tbody.innerHTML = students.map(st => `<tr>
+    <td class="muted">${st.id}</td>
+    <td><strong>${st.name}</strong></td>
+    <td>${codes[st.id]?`<span class="code-cell">${codes[st.id]}</span>`:`<span class="missing">미발급</span>`}</td>
+    <td style="text-align:right"><button class="btn btn-outline btn-sm" onclick="regenerateOne('${st.id}')">재발급</button></td>
+  </tr>`).join("") || `<tr><td colspan="4" style="padding:30px;text-align:center;color:#9E9E98;">검색 결과 없음</td></tr>`;
+}
+
+function renderPreview() {
+  if (!sheetData) {
+    document.getElementById("preview-no-data").classList.remove("hidden");
+    document.getElementById("preview-content").classList.add("hidden");
+    return;
+  }
+  document.getElementById("preview-no-data").classList.add("hidden");
+  document.getElementById("preview-content").classList.remove("hidden");
+  const { assessments, students } = sheetData;
+  const maxTotal = assessments.reduce((a,b)=>a+(b.max||0),0);
+  document.getElementById("preview-summary").innerHTML = `학생 <strong style="color:#1A1A1A">${students.length}</strong>명 · 평가항목 <strong style="color:#1A1A1A">${assessments.length}</strong>개`;
+  document.getElementById("preview-thead").innerHTML = `<tr><th>학번</th><th>이름</th>${assessments.map(a=>`<th class="center">${a.title}<div style="font-size:10px;font-weight:400;color:#9E9E98;margin-top:2px">/${a.max??"-"}</div></th>`).join("")}<th class="center">합계</th></tr>`;
+  document.getElementById("preview-tbody").innerHTML = students.map(st => {
+    const total = st.scores.reduce((a,b)=>a+(b??0),0);
+    return `<tr><td class="muted">${st.id}</td><td><strong>${st.name}</strong></td>${st.scores.map(sc=>`<td class="center" style="color:${sc===null?"#9E9E98":"#1A1A1A"};font-style:${sc===null?"italic":"normal"}">${sc===null?"-":sc}</td>`).join("")}<td class="center" style="font-weight:700;color:#3A4A8C">${total}<span style="color:#9E9E98;font-weight:400">/${maxTotal}</span></td></tr>`;
+  }).join("");
+}
+
+// ════════════════════════════════════════════════
+// 초기화
+// ════════════════════════════════════════════════
+load();
+showScreen("login");
+</script>
+</body>
+</html>
